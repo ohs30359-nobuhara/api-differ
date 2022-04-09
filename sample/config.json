@@ -1,0 +1,24 @@
+{
+  "actual": {
+    "url": "http://sample-users.old.xxx.xx",
+    "header": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"
+    },
+    "cookie": "hoge=fuga; fuga=hoge"
+  },
+  "expect": {
+    "url": "http://sample-users.new.xxx.xx",
+    "header": {
+      "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:47.0) Gecko/20100101 Firefox/47.0"
+    },
+    "cookie": "hoge=fuga; fuga=hoge"
+  },
+  "scenario": {
+    "method": "GET",
+    "type": "query",
+    "params": [
+      "id=1",
+      "id=2"
+    ]
+  }
+}
