@@ -1,20 +1,27 @@
 package main
 
 import (
-	"./lib"
+	"bytes"
+	"diff-api/lib"
 	"fmt"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/urfave/cli"
 	"os"
+	"strconv"
 	"time"
 )
 
 func scenarioRun(config string, dist string)  {
 	c :=  lib.LoadConfig(config)
 
-	var successStream, failStream string
+	// create result dir
+	if err := os.Mkdir(dist, 0777); err != nil {
+		fmt.Println(err)
+	}
 
-	for _, param := range c.Scenario.Params {
+	for index, param := range c.Scenario.Params {
+		time.Sleep(time.Second * 1)
+
 		// TODO; handle error
 		var expect, _ = lib.Request(&lib.RequestOption{
 			Method: c.Scenario.Method,
@@ -31,7 +38,7 @@ func scenarioRun(config string, dist string)  {
 			Cookie: c.Actual.Cookie,
 		})
 
-		// key sort
+		// response sort
 		expect = lib.Sort(expect)
 		actual = lib.Sort(actual)
 
@@ -39,49 +46,36 @@ func scenarioRun(config string, dist string)  {
 		diff := differ.DiffMain(expect, actual, false)
 		diff = differ.DiffCleanupEfficiency(diff)
 
-		var diffStream string
+		var b bytes.Buffer
 		var equal = true
 
 		for _, line := range diff {
 			switch line.Type {
 			case diffmatchpatch.DiffDelete:
 				equal = false
-				diffStream += "<span style=\"color: red; \">~~" + line.Text +"~~</span>"
+				b.WriteString(fmt.Sprintf("<span style=\"color: red; font-size: 2em\">~~%s~~</span>", line.Text))
 			case diffmatchpatch.DiffInsert:
 				equal = false
-				diffStream += "<span style=\"color: green; \">" + line.Text +"</span>"
+				b.WriteString(fmt.Sprintf("<span style=\"color: green; font-size: 2em\">~~%s~~</span>", line.Text))
 			default:
-				diffStream += line.Text
+				b.WriteString(line.Text)
 			}
 		}
 
 		if equal {
-			fmt.Printf("\x1b[32m%s\x1b[0m", "✓ ▶ "+ param +"\n")
-			successStream += fmt.Sprintf("- %s \n", param)
-		} else {
-			fmt.Printf("\x1b[31m%s\x1b[0m", "☓ ▶ "+ param + "\n")
-			failStream += fmt.Sprintf("```%s```   \n\n", param)
-			failStream += fmt.Sprintf("%s  \n\n", diffStream)
-
+			fmt.Printf("\x1b[32m%s\x1b[0m", fmt.Sprintf("[GREEN] %s \n", param))
+			continue
 		}
-		time.Sleep(time.Second * 1)
-	}
+		fmt.Printf("\x1b[31m%s\x1b[0m", fmt.Sprintf("[ RED ] %s \n", param))
 
-	// report format
-	out := "# diff result  \n"
-	out += fmt.Sprintf("## success \n%s \n", successStream)
-	out += fmt.Sprintf("## fail \n%s \n", failStream)
-
-	file, err := os.Create(dist)
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	data := []byte(out)
-	_, err = file.Write(data)
-	if err != nil {
-		panic(err)
+		// create diff file to "xxx/diff_x.md"
+		file, err := os.Create(fmt.Sprintf("%s/diff_%s.md", dist, strconv.Itoa(index))); if err != nil {
+			panic(err.Error())
+		}
+		_, err = file.WriteString(b.String()); if err != nil {
+			panic(err.Error())
+		}
+		file.Close()
 	}
 }
 
@@ -99,7 +93,8 @@ func main() {
 		&cli.StringFlag {
 			Name:        "o",
 			Usage:       "dist report path",
-			Required:    true,
+			Value:       "report",
+			Required:    false,
 		},
 	}
 

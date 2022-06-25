@@ -56,7 +56,6 @@ Please refer to the following sample for JSON
 ### -o (out)
 
 The path to output the result.  
-Please specify with xxx.md because it is fixed to .md.
 
 ## Develop
 test run
