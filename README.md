@@ -1,6 +1,22 @@
 # api-differ 
 CLI for validating delta comparisons of API responses
 
+```
+$ api-differ -c config.json -o report
+
+>
+[ RED ] http://xxx.xxx.com?hogehoge=aaa
+[GREEN] http://xxx.xxx.com?hogehoge=bbb
+[ RED ] http://xxx.xxx.com?hogehoge=ccc
+```
+
+directory of reports is created
+```
+report
+├── diff_1.md
+
+```
+
 ## Usage Manual
 
 ```shell
@@ -44,7 +60,6 @@ Please refer to the following sample for JSON
   },
   "scenario": {
     "method": "GET",
-    "type": "query",
     "params": [
       "id=1",
       "id=2"
@@ -57,11 +72,12 @@ Please refer to the following sample for JSON
 
 The path to output the result.  
 
+
 ## Develop
 test run
 
 ```shell
-go run main.go -c sample/config.json ./dist.md
+go run main.go -c sample/config.json -o report
 ```
 
 build 
