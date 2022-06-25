@@ -22,21 +22,31 @@ func scenarioRun(config string, dist string)  {
 	for index, param := range c.Scenario.Params {
 		time.Sleep(time.Second * 1)
 
-		// TODO; handle error
-		var expect, _ = lib.Request(&lib.RequestOption{
+		expect, e := lib.Request(&lib.RequestOption{
 			Method: c.Scenario.Method,
-			Url: c.Expect.Url+"?"+param,
+			Url: c.Expect.Url,
 			Header: c.Expect.Header,
 			Cookie: c.Expect.Cookie,
+			Param: param,
 		})
 
-		// TODO; handle error
-		var actual, _ = lib.Request(&lib.RequestOption{
+		if e != nil {
+			fmt.Printf("\x1b[31m%s\x1b[0m", fmt.Sprintf("since the request failed, the difference will not be executed. URL is %s \n", c.Expect.Url))
+			continue
+		}
+
+		actual, e := lib.Request(&lib.RequestOption{
 			Method: c.Scenario.Method,
-			Url: c.Actual.Url+"?"+param,
+			Url: c.Actual.Url,
 			Header: c.Actual.Header,
 			Cookie: c.Actual.Cookie,
+			Param: param,
 		})
+
+		if e != nil {
+			fmt.Printf("\x1b[31m%s\x1b[0m", fmt.Sprintf("since the request failed, the difference will not be executed. URL is %s \n", c.Expect.Url))
+			continue
+		}
 
 		// response sort
 		expect = lib.Sort(expect)
@@ -69,11 +79,11 @@ func scenarioRun(config string, dist string)  {
 		fmt.Printf("\x1b[31m%s\x1b[0m", fmt.Sprintf("[ RED ] %s \n", param))
 
 		// create diff file to "xxx/diff_x.md"
-		file, err := os.Create(fmt.Sprintf("%s/diff_%s.md", dist, strconv.Itoa(index))); if err != nil {
-			panic(err.Error())
+		file, e := os.Create(fmt.Sprintf("%s/diff_%s.md", dist, strconv.Itoa(index))); if e != nil {
+			panic(e.Error())
 		}
-		_, err = file.WriteString(b.String()); if err != nil {
-			panic(err.Error())
+		_, e = file.WriteString(b.String()); if e != nil {
+			panic(e.Error())
 		}
 		file.Close()
 	}

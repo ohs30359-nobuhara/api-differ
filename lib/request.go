@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"bytes"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -11,12 +13,23 @@ type RequestOption struct {
 	Url    string
 	Header map[string]string
 	Cookie string
-	Body   *string
+	Param  string
 }
 
 func Request(op *RequestOption) (string, error) {
 	// fmt.Printf("(%%#v) %#v\n", op)
-	req, _ := http.NewRequest(op.Method, op.Url, nil)
+	var req *http.Request
+
+	switch strings.ToUpper(op.Method) {
+	case "GET":
+		req, _ = http.NewRequest(op.Method, op.Url+"?"+op.Param, nil)
+		break
+	case "POST":
+		req, _ = http.NewRequest(op.Method, op.Url, bytes.NewBuffer([]byte(op.Param)))
+		break
+	default:
+		return "", errors.New("method type is require GET or POST")
+	}
 
 	// header処理
 	for k,v := range op.Header {
